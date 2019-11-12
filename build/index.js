@@ -15,7 +15,9 @@
       }
       return truth;
     };
-    callback('ready');
+    setTimeout(function() {
+      return callback('ready');
+    });
     return {
       on: function(name, callback) {
         callbacks[name].push(callback);
