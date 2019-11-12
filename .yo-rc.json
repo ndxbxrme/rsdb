@@ -1,0 +1,16 @@
+{
+  "generator-ndx": {
+    "filters": {
+      "settings": {
+        "appType": "cli",
+        "clientServer": "server",
+        "description": "ndx-framework web app",
+        "server": true,
+        "appName": "rsdb",
+        "gitname": "ndxbxrme",
+        "gitemail": "lewis_the_cat@hotmail.com"
+      }
+    },
+    "appname": "DEV"
+  }
+}
