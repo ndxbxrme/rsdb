@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../src/",
+  "sources": [
+    "index.coffee"
+  ],
+  "names": [],
+  "mappings": "AAAA;EAAA;EAEA,MAAM,CAAC,OAAP,GAAiB,QAAA,CAAC,EAAD,CAAA;AACf,QAAA,QAAA,EAAA;IAAA,SAAA,GACE;MAAA,KAAA,EAAO;IAAP;IACF,QAAA,GAAW,MAAA,QAAA,CAAC,IAAD,EAAO,GAAP,CAAA;AACT,UAAA,EAAA,EAAA,CAAA,EAAA,GAAA,EAAA,GAAA,EAAA;MAAA,KAAA,GAAQ;AACR;MAAA,KAAA,qCAAA;;QACE,KAAA,GAAQ,KAAA,IAAS,CAAA,MAAM,EAAA,CAAG,GAAH,CAAN;MADnB;aAEA;IAJS;WAKX,QAAA,CAAS,OAAT;EARe;AAFjB",
+  "sourcesContent": [
+    "'use strict'\r\n\r\nmodule.exports = (rs) ->\r\n  callbacks =\r\n    ready: []\r\n  callback = (name, obj) ->\r\n    truth = false\r\n    for cb in callbacks[name]\r\n      truth = truth or await cb obj\r\n    truth\r\n  callback 'ready'"
+  ]
+}
