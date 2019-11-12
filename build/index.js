@@ -15,7 +15,17 @@
       }
       return truth;
     };
-    return callback('ready');
+    callback('ready');
+    return {
+      on: function(name, callback) {
+        callbacks[name].push(callback);
+        return this;
+      },
+      off: function(name, callback) {
+        callbacks[name].splice(callbacks[name].indexOf(callback), 1);
+        return this;
+      }
+    };
   };
 
 }).call(this);

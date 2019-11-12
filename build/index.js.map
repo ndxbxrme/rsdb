@@ -6,8 +6,8 @@
     "index.coffee"
   ],
   "names": [],
-  "mappings": "AAAA;EAAA;EAEA,MAAM,CAAC,OAAP,GAAiB,QAAA,CAAC,EAAD,CAAA;AACf,QAAA,QAAA,EAAA;IAAA,SAAA,GACE;MAAA,KAAA,EAAO;IAAP;IACF,QAAA,GAAW,MAAA,QAAA,CAAC,IAAD,EAAO,GAAP,CAAA;AACT,UAAA,EAAA,EAAA,CAAA,EAAA,GAAA,EAAA,GAAA,EAAA;MAAA,KAAA,GAAQ;AACR;MAAA,KAAA,qCAAA;;QACE,KAAA,GAAQ,KAAA,IAAS,CAAA,MAAM,EAAA,CAAG,GAAH,CAAN;MADnB;aAEA;IAJS;WAKX,QAAA,CAAS,OAAT;EARe;AAFjB",
+  "mappings": "AAAA;EAAA;EAEA,MAAM,CAAC,OAAP,GAAiB,QAAA,CAAC,EAAD,CAAA;AACf,QAAA,QAAA,EAAA;IAAA,SAAA,GACE;MAAA,KAAA,EAAO;IAAP;IACF,QAAA,GAAW,MAAA,QAAA,CAAC,IAAD,EAAO,GAAP,CAAA;AACT,UAAA,EAAA,EAAA,CAAA,EAAA,GAAA,EAAA,GAAA,EAAA;MAAA,KAAA,GAAQ;AACR;MAAA,KAAA,qCAAA;;QACE,KAAA,GAAQ,KAAA,IAAS,CAAA,MAAM,EAAA,CAAG,GAAH,CAAN;MADnB;aAEA;IAJS;IAKX,QAAA,CAAS,OAAT;WAEA;MAAA,EAAA,EAAI,QAAA,CAAC,IAAD,EAAO,QAAP,CAAA;QACF,SAAU,CAAA,IAAA,CAAK,CAAC,IAAhB,CAAqB,QAArB;eACA;MAFE,CAAJ;MAGA,GAAA,EAAK,QAAA,CAAC,IAAD,EAAO,QAAP,CAAA;QACH,SAAU,CAAA,IAAA,CAAK,CAAC,MAAhB,CAAuB,SAAU,CAAA,IAAA,CAAK,CAAC,OAAhB,CAAwB,QAAxB,CAAvB,EAA0D,CAA1D;eACA;MAFG;IAHL;EAVe;AAFjB",
   "sourcesContent": [
-    "'use strict'\r\n\r\nmodule.exports = (rs) ->\r\n  callbacks =\r\n    ready: []\r\n  callback = (name, obj) ->\r\n    truth = false\r\n    for cb in callbacks[name]\r\n      truth = truth or await cb obj\r\n    truth\r\n  callback 'ready'"
+    "'use strict'\r\n\r\nmodule.exports = (rs) ->\r\n  callbacks =\r\n    ready: []\r\n  callback = (name, obj) ->\r\n    truth = false\r\n    for cb in callbacks[name]\r\n      truth = truth or await cb obj\r\n    truth\r\n  callback 'ready'\r\n  \r\n  on: (name, callback) ->\r\n    callbacks[name].push callback\r\n    @\r\n  off: (name, callback) ->\r\n    callbacks[name].splice callbacks[name].indexOf(callback), 1\r\n    @"
   ]
 }

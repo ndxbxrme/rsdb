@@ -9,3 +9,10 @@ module.exports = (rs) ->
       truth = truth or await cb obj
     truth
   callback 'ready'
+  
+  on: (name, callback) ->
+    callbacks[name].push callback
+    @
+  off: (name, callback) ->
+    callbacks[name].splice callbacks[name].indexOf(callback), 1
+    @
