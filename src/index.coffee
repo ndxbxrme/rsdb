@@ -8,7 +8,8 @@ module.exports = (rs) ->
     for cb in callbacks[name]
       truth = truth or await cb obj
     truth
-  callback 'ready'
+  setTimeout ->
+    callback 'ready'
   
   on: (name, callback) ->
     callbacks[name].push callback
