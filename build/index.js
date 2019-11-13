@@ -546,7 +546,7 @@
         return dbUser = user;
       }
     };
-    ref = config.tables;
+    ref = config.tables != null;
     for (j = 0, len = ref.length; j < len; j++) {
       table = ref[j];
       (function(table) {
