@@ -368,7 +368,10 @@ module.exports = (config) ->
     keys = await storage.keys null, settings.DATABASE + ':node:'
     if keys and keys.Contents and keys.Contents.length > (+config.consolidateCount or 500)
       await consolidate()
-  attachDatabase()
+  if config.tables and config.tables.length
+    attachDatabase()
+  else
+    console.log 'No tables configured'
 
   dbObj =  
     on: (name, callback) ->
