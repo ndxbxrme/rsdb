@@ -13,7 +13,8 @@ module.exports = (config) ->
     key.replace regex, ''
   checkDataDir: ->
     if config.localStorage
-      await fs.mkdir path.join(config.localStorage) if not await fs.exists path.join(config.localStorage)
+      if not await fs.exists path.join(config.localStorage)
+        await fs.mkdir path.join(config.localStorage) 
   keys: (from, prefix) ->
     ls = path.join(config.localStorage).replace(/\\/g, '/') + '/'
     new Promise (resolve, reject) ->

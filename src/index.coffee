@@ -12,7 +12,7 @@ module.exports = (config) ->
   config.maxSqlCacheSize = config.maxSqlCacheSize or 100
   config.encryptionKey = config.encryptionKey or process.env[config.appName + '_ENCRYPTION_KEY'] or 'meG4Ran4om'
   storage = require('./storage') config
-  #await storage.checkDataDir()
+  storage.checkDataDir()
   database = null
   sqlCache = {}
   sqlCacheSize = 0
