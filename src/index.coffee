@@ -392,7 +392,7 @@ module.exports = (config) ->
     consolidate: consolidate
     setUser: (user) ->
       dbUser = user
-  for table in config.tables
+  for table in config.tables?
     ((table) ->
       dbObj[table] =
         select: (args, isServer) ->
