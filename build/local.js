@@ -21,10 +21,10 @@
       return key.replace(regex, '');
     };
     return {
-      checkDataDir: async function() {
+      checkDataDir: function() {
         if (config.localStorage) {
-          if (!(await fs.exists(path.join(config.localStorage)))) {
-            return (await fs.mkdir(path.join(config.localStorage)));
+          if (!fs.existsSync(path.join(config.localStorage))) {
+            return fs.mkdirSync(path.join(config.localStorage));
           }
         }
       },
