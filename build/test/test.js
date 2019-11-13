@@ -8,6 +8,7 @@
     tables: ['users']
   }).on('ready', async function() {
     var users;
+    console.log(db);
     await db.users.insert({
       name: 'jeff'
     });

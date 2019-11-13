@@ -546,31 +546,33 @@
         return dbUser = user;
       }
     };
-    ref = config.tables != null;
-    for (j = 0, len = ref.length; j < len; j++) {
-      table = ref[j];
-      (function(table) {
-        return dbObj[table] = {
-          select: function(args, isServer) {
-            return select(table, args, isServer);
-          },
-          selectOne: function(args, isServer) {
-            return select(table, args, isServer);
-          },
-          update: function(obj, whereObj, isServer) {
-            return update(table, obj, whereObj, isServer);
-          },
-          insert: function(obj, isServer) {
-            return insert(table, obj, isServer);
-          },
-          upsert: function(obj, whereObj, isServer) {
-            return upsert(table, obj, whereObj, isServer);
-          },
-          delete: function(whereObj, isServer) {
-            return del(table, whereObj, isServer);
-          }
-        };
-      })(table);
+    if (config.tables) {
+      ref = config.tables;
+      for (j = 0, len = ref.length; j < len; j++) {
+        table = ref[j];
+        (function(table) {
+          return dbObj[table] = {
+            select: function(args, isServer) {
+              return select(table, args, isServer);
+            },
+            selectOne: function(args, isServer) {
+              return select(table, args, isServer);
+            },
+            update: function(obj, whereObj, isServer) {
+              return update(table, obj, whereObj, isServer);
+            },
+            insert: function(obj, isServer) {
+              return insert(table, obj, isServer);
+            },
+            upsert: function(obj, whereObj, isServer) {
+              return upsert(table, obj, whereObj, isServer);
+            },
+            delete: function(whereObj, isServer) {
+              return del(table, whereObj, isServer);
+            }
+          };
+        })(table);
+      }
     }
     return dbObj;
   };

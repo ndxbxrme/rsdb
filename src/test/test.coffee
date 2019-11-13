@@ -5,6 +5,7 @@ db = require('../index')
   localStorage: 'data'
   tables: ['users']
 .on 'ready', ->
+  console.log db
   await db.users.insert
     name: 'jeff'
   users = await db.users.select()

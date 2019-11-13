@@ -6,8 +6,8 @@
     "test.coffee"
   ],
   "names": [],
-  "mappings": "AAAA;EAAA;AAAA,MAAA;;EAEA,EAAA,GAAK,OAAA,CAAQ,UAAR,CAAA,CACH;IAAA,QAAA,EAAU,MAAV;IACA,YAAA,EAAc,MADd;IAEA,MAAA,EAAQ,CAAC,OAAD;EAFR,CADG,CAIL,CAAC,EAJI,CAID,OAJC,EAIQ,MAAA,QAAA,CAAA,CAAA;AACX,QAAA;IAAA,MAAM,EAAE,CAAC,KAAK,CAAC,MAAT,CACJ;MAAA,IAAA,EAAM;IAAN,CADI;IAEN,KAAA,GAAQ,CAAA,MAAM,EAAE,CAAC,KAAK,CAAC,MAAT,CAAA,CAAN;WACR,OAAO,CAAC,GAAR,CAAY,KAAZ;EAJW,CAJR;AAFL",
+  "mappings": "AAAA;EAAA;AAAA,MAAA;;EAEA,EAAA,GAAK,OAAA,CAAQ,UAAR,CAAA,CACH;IAAA,QAAA,EAAU,MAAV;IACA,YAAA,EAAc,MADd;IAEA,MAAA,EAAQ,CAAC,OAAD;EAFR,CADG,CAIL,CAAC,EAJI,CAID,OAJC,EAIQ,MAAA,QAAA,CAAA,CAAA;AACX,QAAA;IAAA,OAAO,CAAC,GAAR,CAAY,EAAZ;IACA,MAAM,EAAE,CAAC,KAAK,CAAC,MAAT,CACJ;MAAA,IAAA,EAAM;IAAN,CADI;IAEN,KAAA,GAAQ,CAAA,MAAM,EAAE,CAAC,KAAK,CAAC,MAAT,CAAA,CAAN;WACR,OAAO,CAAC,GAAR,CAAY,KAAZ;EALW,CAJR;AAFL",
   "sourcesContent": [
-    "'use strict'\r\n\r\ndb = require('../index')\r\n  database: 'test'\r\n  localStorage: 'data'\r\n  tables: ['users']\r\n.on 'ready', ->\r\n  await db.users.insert\r\n    name: 'jeff'\r\n  users = await db.users.select()\r\n  console.log users"
+    "'use strict'\r\n\r\ndb = require('../index')\r\n  database: 'test'\r\n  localStorage: 'data'\r\n  tables: ['users']\r\n.on 'ready', ->\r\n  console.log db\r\n  await db.users.insert\r\n    name: 'jeff'\r\n  users = await db.users.select()\r\n  console.log users"
   ]
 }

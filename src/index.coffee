@@ -392,20 +392,21 @@ module.exports = (config) ->
     consolidate: consolidate
     setUser: (user) ->
       dbUser = user
-  for table in config.tables?
-    ((table) ->
-      dbObj[table] =
-        select: (args, isServer) ->
-          select table, args, isServer
-        selectOne: (args, isServer) ->
-          select table, args, isServer
-        update: (obj, whereObj, isServer) ->
-          update table, obj, whereObj, isServer
-        insert: (obj, isServer) ->
-          insert table, obj, isServer
-        upsert: (obj, whereObj, isServer) ->
-          upsert table, obj, whereObj, isServer
-        delete: (whereObj, isServer) ->
-          del table, whereObj, isServer
-    ) table
+  if config.tables
+    for table in config.tables
+      ((table) ->
+        dbObj[table] =
+          select: (args, isServer) ->
+            select table, args, isServer
+          selectOne: (args, isServer) ->
+            select table, args, isServer
+          update: (obj, whereObj, isServer) ->
+            update table, obj, whereObj, isServer
+          insert: (obj, isServer) ->
+            insert table, obj, isServer
+          upsert: (obj, whereObj, isServer) ->
+            upsert table, obj, whereObj, isServer
+          delete: (whereObj, isServer) ->
+            del table, whereObj, isServer
+      ) table
   dbObj
