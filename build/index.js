@@ -518,7 +518,11 @@
         return (await consolidate());
       }
     };
-    attachDatabase();
+    if (config.tables && config.tables.length) {
+      attachDatabase();
+    } else {
+      console.log('No tables configured');
+    }
     dbObj = {
       on: function(name, callback) {
         callbacks[name].push(callback);
