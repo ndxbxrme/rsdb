@@ -10,6 +10,8 @@
 
   utils = require('./utils');
 
+  console.log('HELLO');
+
   module.exports = function(config) {
     var attachDatabase, callback, callbacks, consolidate, consolidateCheck, database, dbObj, dbUser, del, deleteKeys, exec, getId, getIdField, inflate, insert, j, len, maintenanceMode, ref, resetSqlCache, restoreDatabase, restoreFromBackup, saveDatabase, select, selectOne, sqlCache, sqlCacheSize, storage, table, update, upsert;
     dbUser = null;
@@ -569,6 +571,15 @@
             },
             delete: function(whereObj, isServer) {
               return del(table, whereObj, isServer);
+            },
+            on: function(name, callback) {
+              return callbacks[name].push(function(args, cb) {
+                if (args.table === table) {
+                  return callback(args, cb);
+                } else {
+                  return cb(true);
+                }
+              });
             }
           };
         })(table);

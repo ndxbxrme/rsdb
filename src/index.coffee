@@ -4,7 +4,7 @@ alasql = require 'alasql'
 ObjectID = require 'bson-objectid'
 objtrans = require 'objtrans'
 utils = require './utils'
-
+console.log 'HELLO'
 
 module.exports = (config) ->
   dbUser = null
@@ -408,5 +408,11 @@ module.exports = (config) ->
             upsert table, obj, whereObj, isServer
           delete: (whereObj, isServer) ->
             del table, whereObj, isServer
+          on: (name, callback) ->
+            callbacks[name].push (args, cb) ->
+              if args.table is table
+                callback args, cb
+              else
+                cb true
       ) table
   dbObj
