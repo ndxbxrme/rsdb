@@ -384,6 +384,9 @@
             isServer: isServer,
             user: user
           });
+          output.total = total;
+          output.page = args.page || 1;
+          output.pageSize = args.pageSize || 0;
           return resolve(output);
         })(dbUser);
       });

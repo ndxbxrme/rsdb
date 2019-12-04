@@ -271,6 +271,9 @@ module.exports = (config) ->
           objs: output
           isServer: isServer
           user: user
+        output.total = total
+        output.page = args.page or 1
+        output.pageSize = args.pageSize or 0
         resolve output
       )(dbUser)
   selectOne = (table, args, isServer) ->
