@@ -10,8 +10,6 @@
 
   utils = require('./utils');
 
-  console.log('HELLO');
-
   module.exports = function(config) {
     var attachDatabase, callback, callbacks, consolidate, consolidateCheck, database, dbObj, dbUser, del, deleteKeys, exec, getId, getIdField, inflate, insert, j, len, maintenanceMode, ref, resetSqlCache, restoreDatabase, restoreFromBackup, saveDatabase, select, selectOne, sqlCache, sqlCacheSize, storage, table, update, upsert;
     dbUser = null;
@@ -69,31 +67,32 @@
       }
       return callback('restore', database);
     };
-    inflate = async function(from, getFn) {
-      var j, key, keys, len, ref;
-      if (!getFn) {
-        getFn = storage.get;
-      }
-      keys = (await storage.keys(from, config.database + ':node:'));
-      ref = keys.Contents;
-      for (j = 0, len = ref.length; j < len; j++) {
-        key = ref[j];
-        key.Key.replace(/(.+):(.+):(.+)\/(.+)(:.+)*/, async function(all, db, type, table, id, randId) {
-          var o;
+    inflate = function(from, getFn) {
+      return new Promise(async function(resolve, reject) {
+        var all, db, id, j, key, keys, len, o, randId, ref, table, type;
+        if (!getFn) {
+          getFn = storage.get;
+        }
+        keys = (await storage.keys(from, config.database + ':node:'));
+        ref = keys.Contents;
+        for (j = 0, len = ref.length; j < len; j++) {
+          key = ref[j];
+          [all, db, type, table, id, randId] = key.Key.match(/(.+):(.+):(.+)\/(.+)(:.+)*/);
           if (db && table && id && db.substr(db.lastIndexOf('/') + 1) === config.database) {
             o = (await getFn(key.Key));
             if (o._id) {
               database.exec('DELETE FROM ' + table + ' WHERE _id=?', [o._id]);
               if (!o['__!deleteMe!']) {
-                return database.exec('INSERT INTO ' + table + ' VALUES ?', [o]);
+                database.exec('INSERT INTO ' + table + ' VALUES ?', [o]);
               }
             }
           }
-        });
-      }
-      if (keys.IsTruncated) {
-        return (await inflate(keys.Contents[keys.Contents.length - 1].Key));
-      }
+        }
+        if (keys.IsTruncated) {
+          await inflate(keys.Contents[keys.Contents.length - 1].Key);
+        }
+        return resolve('done');
+      });
     };
     deleteKeys = async function() {
       var j, key, keys, len, ref;
@@ -108,7 +107,13 @@
       }
     };
     saveDatabase = async function() {
-      await storage.put(config.database + ':database', database.tables);
+      var e;
+      try {
+        await storage.put(config.database + ':database', database.tables);
+      } catch (error1) {
+        e = error1;
+        console.log('save db error', e);
+      }
       return maintenanceMode = false;
     };
     attachDatabase = async function() {
@@ -133,7 +138,10 @@
           return callback('ready', database);
         } catch (error1) {
           e = error1;
-          return console.log(e);
+          if (e === 'nodata') {
+            await saveDatabase();
+            return callback('ready', database);
+          }
         }
       } else {
         maintenanceMode = false;
@@ -142,15 +150,20 @@
     };
     restoreFromBackup = function() {
       return new Promise(async function(resolve) {
-        var o;
-        maintenanceMode = true;
-        o = (await storage.get(''));
-        await restoreDatabase(o);
-        await deleteKeys();
-        await saveDatabase();
-        console.log("backup restored");
-        callback('restore', null);
-        return resolve();
+        var e, o;
+        try {
+          maintenanceMode = true;
+          o = (await storage.get(''));
+          await restoreDatabase(o);
+          await deleteKeys();
+          await saveDatabase();
+          console.log("backup restored");
+          callback('restore', null);
+          return resolve();
+        } catch (error1) {
+          e = error1;
+          return console.log('restore error', e);
+        }
       });
     };
     exec = function(sql, props, notCritical, isServer, changes) {
@@ -549,6 +562,19 @@
       consolidate: consolidate,
       setUser: function(user) {
         return dbUser = user;
+      },
+      wrapUserFunctions: function(user) {
+        var fns, j, len, op, ref;
+        fns = {};
+        ref = ['select', 'selectOne', 'update', 'insert', 'upsert', 'delete'];
+        for (j = 0, len = ref.length; j < len; j++) {
+          op = ref[j];
+          fns[op] = function() {
+            dbUser = user;
+            return this[op].call(this, arguments);
+          };
+        }
+        return fns;
       }
     };
     if (config.tables) {

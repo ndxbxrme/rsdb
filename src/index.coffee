@@ -4,7 +4,6 @@ alasql = require 'alasql'
 ObjectID = require 'bson-objectid'
 objtrans = require 'objtrans'
 utils = require './utils'
-console.log 'HELLO'
 
 module.exports = (config) ->
   dbUser = null
@@ -48,18 +47,20 @@ module.exports = (config) ->
         database.exec 'INSERT INTO ' + key + ' SELECT * FROM ?', [data[key].data]
     callback 'restore', database
   inflate = (from, getFn) ->
-    getFn = storage.get if not getFn
-    keys = await storage.keys from, config.database + ':node:'
-    for key in keys.Contents
-      key.Key.replace /(.+):(.+):(.+)\/(.+)(:.+)*/, (all, db, type, table, id, randId) ->
+    new Promise (resolve, reject) ->
+      getFn = storage.get if not getFn
+      keys = await storage.keys from, config.database + ':node:'
+      for key in keys.Contents
+        [all, db, type, table, id, randId] = key.Key.match /(.+):(.+):(.+)\/(.+)(:.+)*/
         if db and table and id and db.substr(db.lastIndexOf('/') + 1) is config.database
           o = await getFn key.Key
           if o._id
             database.exec 'DELETE FROM ' + table + ' WHERE _id=?', [o._id]
             if not o['__!deleteMe!']
               database.exec 'INSERT INTO ' + table + ' VALUES ?', [o]
-    if keys.IsTruncated
-      await inflate keys.Contents[keys.Contents.length-1].Key
+      if keys.IsTruncated
+        await inflate keys.Contents[keys.Contents.length-1].Key
+      resolve 'done'
   deleteKeys = ->
     keys = await storage.keys null, config.database + ':node:'
     for key in keys.Contents
@@ -67,7 +68,10 @@ module.exports = (config) ->
     if keys.IsTruncated
       await deleteKeys()
   saveDatabase = ->
-    await storage.put config.database + ':database', database.tables
+    try
+      await storage.put config.database + ':database', database.tables
+    catch e
+      console.log 'save db error', e
     maintenanceMode = false
   attachDatabase = ->
     maintenanceMode = true
@@ -86,20 +90,25 @@ module.exports = (config) ->
         await saveDatabase()
         callback 'ready', database
       catch e
-        console.log e
+        if e is 'nodata'
+          await saveDatabase()
+          callback 'ready', database
     else
       maintenanceMode = false
       callback 'ready', database
   restoreFromBackup = () ->
     new Promise (resolve) ->
-      maintenanceMode = true
-      o = await storage.get ''
-      await restoreDatabase o
-      await deleteKeys()
-      await saveDatabase()
-      console.log "backup restored"
-      callback 'restore', null
-      resolve()
+      try
+        maintenanceMode = true
+        o = await storage.get ''
+        await restoreDatabase o
+        await deleteKeys()
+        await saveDatabase()
+        console.log "backup restored"
+        callback 'restore', null
+        resolve()
+      catch e
+        console.log 'restore error', e
   exec = (sql, props, notCritical, isServer, changes) ->
     if maintenanceMode
       return []
@@ -395,6 +404,13 @@ module.exports = (config) ->
     consolidate: consolidate
     setUser: (user) ->
       dbUser = user
+    wrapUserFunctions: (user) ->
+      fns = {}
+      for op in ['select', 'selectOne', 'update', 'insert', 'upsert', 'delete']
+        fns[op] = ->
+          dbUser = user
+          @[op].call @, arguments
+      fns
   if config.tables
     for table in config.tables
       ((table) ->

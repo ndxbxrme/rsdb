@@ -17,9 +17,15 @@
     algorithm = config.encryptionAlgorithm || 'aes-256-ctr';
     doencrypt = !config.doNotEncrypt;
     dozip = !config.doNotEncrypt;
-    local = require('./local')(config);
-    devices = [];
     if (config.localStorage) {
+      if (typeof config.localStorage === 'object') {
+        local = require('./local-web')(config);
+        doencrypt = false;
+        dozip = false;
+      } else {
+        local = require('./local-fs')(config);
+      }
+      devices = [];
       devices.push(local);
     }
     return {
@@ -31,7 +37,7 @@
       },
       keys: function(from, prefix) {
         return new Promise(async function(resolve, reject) {
-          var device, i, len, resolved;
+          var device, e, i, len, resolved;
           if (!devices.length) {
             return reject('no storage');
           }
@@ -40,7 +46,10 @@
             device = devices[i];
             try {
               return resolve((await device.keys(from, prefix)));
-            } catch (error) {}
+            } catch (error) {
+              e = error;
+              console.log('keys error', e);
+            }
           }
           return reject('nothing found');
         });
@@ -88,12 +97,28 @@
             return jsStringify.flush();
           });
           jsStringify.end();
-          st.on('close', resolve);
-          st.on('error', reject);
-          writeStream.on('error', reject);
-          writeStream.on('uploaded', resolve);
-          gzip.on('error', reject);
-          return encrypt.on('error', reject);
+          if (typeof config.localStorage === 'object') {
+            return resolve();
+          } else {
+            st.on('close', function() {
+              return resolve();
+            });
+            st.on('error', function(e) {
+              return reject();
+            });
+            writeStream.on('error', function(e) {
+              return reject();
+            });
+            writeStream.on('uploaded', function() {
+              return resolve();
+            });
+            gzip.on('error', function(e) {
+              return reject();
+            });
+            return encrypt.on('error', function(e) {
+              return reject();
+            });
+          }
         });
       },
       get: function(key) {

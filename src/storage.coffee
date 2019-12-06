@@ -10,9 +10,14 @@ module.exports = (config) ->
   algorithm = config.encryptionAlgorithm or 'aes-256-ctr'
   doencrypt = !config.doNotEncrypt
   dozip = !config.doNotEncrypt
-  local = require('./local') config
-  devices = []
   if config.localStorage
+    if typeof config.localStorage is 'object'
+      local = require('./local-web') config
+      doencrypt = false
+      dozip = false
+    else
+      local = require('./local-fs') config
+    devices = []
     devices.push local
   #S3
   checkDataDir: ->
@@ -25,6 +30,8 @@ module.exports = (config) ->
       for device in devices
         try
           return resolve await device.keys from, prefix
+        catch e
+          console.log 'keys error', e
       reject 'nothing found'
   del: (key) ->
     for device in devices
@@ -54,12 +61,21 @@ module.exports = (config) ->
       jsStringify.write o, ->
         jsStringify.flush()
       jsStringify.end()
-      st.on 'close', resolve
-      st.on 'error', reject
-      writeStream.on 'error', reject
-      writeStream.on 'uploaded', resolve
-      gzip.on 'error', reject
-      encrypt.on 'error', reject
+      if typeof config.localStorage is 'object'
+        resolve()
+      else
+        st.on 'close', ->
+          resolve()
+        st.on 'error', (e) ->
+          reject()
+        writeStream.on 'error', (e) ->
+          reject()
+        writeStream.on 'uploaded', ->
+          resolve()
+        gzip.on 'error', (e) ->
+          reject()
+        encrypt.on 'error', (e) ->
+          reject()
   get: (key) ->
     new Promise (resolve, reject) ->
       jsParse = new jsonStream.parse '*'
