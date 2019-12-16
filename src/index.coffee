@@ -3,6 +3,7 @@
 alasql = require 'alasql'
 ObjectID = require 'bson-objectid'
 objtrans = require 'objtrans'
+DeepDiff = require 'deep-diff'
 utils = require './utils'
 
 module.exports = (config) ->
@@ -36,6 +37,25 @@ module.exports = (config) ->
     for cb in callbacks[name]
       truth = truth or await cb obj
     truth
+  readDiffs = (from, to, out) ->
+    diffs = DeepDiff from, to
+    out = out or {}
+    if diffs
+      for dif in diffs
+        switch dif.kind
+          when 'E', 'N'
+            myout = out
+            mypath = dif.path.join('.')
+            good = true
+            if dif.lhs and dif.rhs and typeof(dif.lhs) isnt typeof(dif.rhs)
+              if dif.lhs.toString() is dif.rhs.toString()
+                good = false
+            if good
+              myout[mypath] ={}
+              myout = myout[mypath]
+              myout.from = dif.lhs
+              myout.to = dif.rhs
+    out
   getId = (row) ->
     row._id or row.id or row._id or row.i
   getIdField = (row) ->
@@ -321,7 +341,7 @@ module.exports = (config) ->
               updateProps.push obj[key]
           updateProps.push id
           dbUser = user
-          exec "UPDATE #{table} SET #{updateSql.join(',')} WHERE `#{[settings.AUTO_ID]}`= ?", updateProps, null, isServer, diffs
+          exec "UPDATE #{table} SET #{updateSql.join(',')} WHERE `_id`= ?", updateProps, null, isServer, diffs
         resolve []
       )(dbUser)
   insert = (table, obj, isServer) ->
@@ -377,7 +397,7 @@ module.exports = (config) ->
     await deleteKeys()
     saveDatabase()
   consolidateCheck = ->
-    keys = await storage.keys null, settings.DATABASE + ':node:'
+    keys = await storage.keys null, config.database + ':node:'
     if keys and keys.Contents and keys.Contents.length > (+config.consolidateCount or 500)
       await consolidate()
   if config.tables and config.tables.length
@@ -407,9 +427,11 @@ module.exports = (config) ->
     wrapUserFunctions: (user) ->
       fns = {}
       for op in ['select', 'selectOne', 'update', 'insert', 'upsert', 'delete']
-        fns[op] = ->
-          dbUser = user
-          @[op].call @, arguments
+        ((op) ->
+          fns[op] = ->
+            dbUser = user
+            dbObj[op].apply @, arguments
+        ) op
       fns
   if config.tables
     for table in config.tables

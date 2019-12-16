@@ -1,6 +1,6 @@
 (function() {
   'use strict';
-  var ObjectID, alasql, objtrans, utils;
+  var DeepDiff, ObjectID, alasql, objtrans, utils;
 
   alasql = require('alasql');
 
@@ -8,10 +8,12 @@
 
   objtrans = require('objtrans');
 
+  DeepDiff = require('deep-diff');
+
   utils = require('./utils');
 
   module.exports = function(config) {
-    var attachDatabase, callback, callbacks, consolidate, consolidateCheck, database, dbObj, dbUser, del, deleteKeys, exec, getId, getIdField, inflate, insert, j, len, maintenanceMode, ref, resetSqlCache, restoreDatabase, restoreFromBackup, saveDatabase, select, selectOne, sqlCache, sqlCacheSize, storage, table, update, upsert;
+    var attachDatabase, callback, callbacks, consolidate, consolidateCheck, database, dbObj, dbUser, del, deleteKeys, exec, getId, getIdField, inflate, insert, j, len, maintenanceMode, readDiffs, ref, resetSqlCache, restoreDatabase, restoreFromBackup, saveDatabase, select, selectOne, sqlCache, sqlCacheSize, storage, table, update, upsert;
     dbUser = null;
     maintenanceMode = false;
     config.maxSqlCacheSize = config.maxSqlCacheSize || 100;
@@ -50,6 +52,35 @@
         truth = truth || (await cb(obj));
       }
       return truth;
+    };
+    readDiffs = function(from, to, out) {
+      var dif, diffs, good, j, len, myout, mypath;
+      diffs = DeepDiff(from, to);
+      out = out || {};
+      if (diffs) {
+        for (j = 0, len = diffs.length; j < len; j++) {
+          dif = diffs[j];
+          switch (dif.kind) {
+            case 'E':
+            case 'N':
+              myout = out;
+              mypath = dif.path.join('.');
+              good = true;
+              if (dif.lhs && dif.rhs && typeof dif.lhs !== typeof dif.rhs) {
+                if (dif.lhs.toString() === dif.rhs.toString()) {
+                  good = false;
+                }
+              }
+              if (good) {
+                myout[mypath] = {};
+                myout = myout[mypath];
+                myout.from = dif.lhs;
+                myout.to = dif.rhs;
+              }
+          }
+        }
+      }
+      return out;
     };
     getId = function(row) {
       return row._id || row.id || row._id || row.i;
@@ -451,7 +482,7 @@
             }
             updateProps.push(id);
             dbUser = user;
-            exec(`UPDATE ${table} SET ${updateSql.join(',')} WHERE \`${[settings.AUTO_ID]}\`= ?`, updateProps, null, isServer, diffs);
+            exec(`UPDATE ${table} SET ${updateSql.join(',')} WHERE \`_id\`= ?`, updateProps, null, isServer, diffs);
           }
           return resolve([]);
         })(dbUser);
@@ -531,7 +562,7 @@
     };
     consolidateCheck = async function() {
       var keys;
-      keys = (await storage.keys(null, settings.DATABASE + ':node:'));
+      keys = (await storage.keys(null, config.database + ':node:'));
       if (keys && keys.Contents && keys.Contents.length > (+config.consolidateCount || 500)) {
         return (await consolidate());
       }
@@ -569,10 +600,12 @@
         ref = ['select', 'selectOne', 'update', 'insert', 'upsert', 'delete'];
         for (j = 0, len = ref.length; j < len; j++) {
           op = ref[j];
-          fns[op] = function() {
-            dbUser = user;
-            return this[op].call(this, arguments);
-          };
+          (function(op) {
+            return fns[op] = function() {
+              dbUser = user;
+              return dbObj[op].apply(this, arguments);
+            };
+          })(op);
         }
         return fns;
       }
